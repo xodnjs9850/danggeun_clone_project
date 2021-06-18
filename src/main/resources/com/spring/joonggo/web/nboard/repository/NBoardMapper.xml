@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.joonggo.web.nboard.repository.NBoardMapper">
+
+    <!--// 게시글 저장 기능-->
+    <!--        void save(NBoard nBoard);-->
+    <insert id="save">
+        INSERT INTO nboard
+        (board_no, user_id, user_nickname, title, content, category)
+        VALUES
+        (seq_nboard.nextval, #{userId}, #{userNickName}, #{title}, #{content}, #{category})
+    </insert>
+
+    <!--        // 게시글 삭제 기능-->
+    <!--        void remove(int boardNo);-->
+    <delete id="remove">
+        DELETE FROM nboard WHERE board_no = #{boardNo}
+    </delete>
+
+    <resultMap id="nBoardMap" type="com.spring.joonggo.web.nboard.domain.NBoard">
+        <!--        property 속성에는 자바필드명, column은 테이블 컬럼명    -->
+        <result property="boardNo" column="board_no"/>
+        <result property="userId" column="user_id"/>
+        <result property="userNickName" column="user_nickname"/>
+        <result property="postDate" column="post_date"/>
+
+        <!--        <result property="category" column="category" />-->
+
+    </resultMap>
+
+    <!--        // 게시글 조회 기능-->
+    <!--        NBoard findOne(int boardNo);-->
+    <select id="findOne" resultMap="nBoardMap">
+        SELECT * FROM nboard WHERE board_no = #{boardNo}
+    </select>
+
+    <!--        // 게시글 수정 기능-->
+    <!--        void change(DummyNBoard dummyNBoard);-->
+    <update id="change">
+        UPDATE nboard
+        SET title = #{title},
+        content = #{content},
+        category = #{category}
+        WHERE board_no = #{boardNo}
+    </update>
+
+    <!--    // 전체 게시글 조회 기능(페이징 기능)-->
+    <!--    List<NBoard> findAll();-->
+    <select id="findAll" resultMap="nBoardMap">
+        <!--        특수 기호를 사용하기 위해서는 <![CDATA[    ]]>로 감싸주면 됨-->
+        <![CDATA[
+        SELECT
+            board_no, user_nickname, title, content, views, recommend, post_date, category
+        FROM
+            (SELECT /*+INDEX_DESC(nboard pk_nboard)*/
+            rownum rn, board_no, user_nickname, title, content, views, recommend, post_date, category
+            FROM nboard
+            WHERE rownum <= #{page} * #{amount} )
+        WHERE rn > (#{page} - 1) * #{amount}
+        ]]>
+    </select>
+
+
+    <!--    // 전체 게시글 조회 기능(페이징 + 검색 기능)-->
+    <!--    List<NBoard> getSearchBoards(Criteria criteria);-->
+    <!--    <select id="getSearchBoards" resultMap="nBoardMap">-->
+    <!--        <![CDATA[-->
+    <!--        SELECT-->
+    <!--            board_no, user_nickname, title, content, views, recommend, post_date, category-->
+    <!--        FROM-->
+    <!--            (SELECT /*+INDEX_DESC(nboard pk_nboard)*/-->
+    <!--            rownum rn, board_no, user_nickname, title, content, views, recommend, post_date, category-->
+    <!--            FROM nboard-->
+    <!--            WHERE-->
+    <!--            ]]>-->
+    <!--        <if test="type == 'title'">-->
+    <!--            title LIKE '%' || #{keyword} || '%' AND-->
+    <!--        </if>-->
+    <!--        <if test="type == 'nickname'">-->
+    <!--            user_nickname LIKE '%' || #{keyword} || '%' AND-->
+    <!--        </if>-->
+    <!--        <if test="type == 'content'">-->
+    <!--            content LIKE '%' || #{keyword} || '%' AND-->
+    <!--        </if>-->
+    <!--        <if test="type == 'titleContent'">-->
+    <!--            (title LIKE '%' || #{keyword} || '%'-->
+    <!--            OR content LIKE '%' || #{keyword} || '%')-->
+    <!--            AND-->
+    <!--        </if>-->
+    <!--        <![CDATA[-->
+    <!--                rownum <= #{page} * #{amount} )-->
+    <!--        WHERE rn > (#{page} - 1) * #{amount}-->
+    <!--        ]]>-->
+    <!--    </select>-->
+
+
+    <!--        // 전체 게시글 조회 기능(페이징 + 검색 기능)-->
+    <!--        List<NBoard> getSearchBoards(Criteria criteria);-->
+
+    <select id="getSearchBoards" resultMap="nBoardMap">
+        <![CDATA[
+        SELECT
+            board_no, user_nickname, title, content, views, recommend, post_date, category
+        FROM
+            (SELECT /*+INDEX_DESC(nboard pk_nboard)*/
+            rownum rn, board_no, user_nickname, title, content, views, recommend, post_date, category
+ ]]>
+        FROM nboard
+        WHERE
+        <if test="type == 'title'">
+            title LIKE '%' || #{keyword} || '%' AND
+        </if>
+        <if test="type == 'nickname'">
+            user_nickname LIKE '%' || #{keyword} || '%' AND
+        </if>
+        <if test="type == 'content'">
+            content LIKE '%' || #{keyword} || '%' AND
+        </if>
+        <if test="type == 'titleContent'">
+            (title LIKE '%' || #{keyword} || '%'
+            OR content LIKE '%' || #{keyword} || '%')
+            AND
+        </if>
+        <if test="category != null">
+            <if test="category.toString() != 'ALL'">
+                category = #{category} AND
+            </if>
+        </if>
+
+        <![CDATA[
+                rownum <= #{page} * #{amount} )
+        WHERE rn > (#{page} - 1) * #{amount}
+        ]]>
+    </select>
+
+
+    <!--검색 + 페이징 쿼리(카테고리 미포함)    -->
+    <!--        <select id="getSearchBoards" resultMap="nBoardMap">-->
+    <!--            <![CDATA[-->
+    <!--            SELECT-->
+    <!--                board_no, user_nickname, title, content, views, recommend, post_date, category-->
+    <!--            FROM-->
+    <!--                (SELECT /*+INDEX_DESC(nboard pk_nboard)*/-->
+    <!--                rownum rn, board_no, user_nickname, title, content, views, recommend, post_date, category-->
+    <!--     ]]>-->
+    <!--            FROM-->
+    <!--                (SELECT-->
+    <!--                board_no, user_nickname, title, content, views, recommend, post_date, category-->
+    <!--                FROM nboard-->
+    <!--                WHERE-->
+    <!--                <if test="category == 'NEIGHBOR'">-->
+    <!--                    category = neighbor AND-->
+    <!--                </if>-->
+    <!--                <if test="category == 'ISSUE'">-->
+    <!--                    category = issue AND-->
+    <!--                </if>-->
+    <!--                <if test="category == 'DAIYLYLIFE'">-->
+    <!--                    category = dailylife AND-->
+    <!--                </if>-->
+    <!--                <if test="category == 'NOTICE'">-->
+    <!--                    category = notice AND-->
+    <!--                </if>-->
+    <!--                <if test="category == 'ETC'">-->
+    <!--                   category = etc AND-->
+    <!--                </if>-->
+    <!--    &lt;!&ndash;            <if test="category == 'ALL'">&ndash;&gt;-->
+    <!--    &lt;!&ndash;                &ndash;&gt;-->
+    <!--    &lt;!&ndash;            </if>&ndash;&gt;-->
+    <!--                board_no is not null )-->
+    <!--            WHERE-->
+    <!--            <if test="type == 'title'">-->
+    <!--                title LIKE '%' || #{keyword} || '%' AND-->
+    <!--            </if>-->
+    <!--            <if test="type == 'nickname'">-->
+    <!--                user_nickname LIKE '%' || #{keyword} || '%' AND-->
+    <!--            </if>-->
+    <!--            <if test="type == 'content'">-->
+    <!--                content LIKE '%' || #{keyword} || '%' AND-->
+    <!--            </if>-->
+    <!--            <if test="type == 'titleContent'">-->
+    <!--                (title LIKE '%' || #{keyword} || '%'-->
+    <!--                OR content LIKE '%' || #{keyword} || '%')-->
+    <!--                AND-->
+    <!--            </if>-->
+    <!--            <![CDATA[-->
+    <!--                    rownum <= #{page} * #{amount} )-->
+    <!--            WHERE rn > (#{page} - 1) * #{amount}-->
+    <!--            ]]>-->
+    <!--        </select>-->
+
+    <!--    // 총 게시물 수 조회-->
+    <!--    int getTotalBoardCount(Criteria criteria);-->
+    <select id="getTotalBoardCount" resultType="int">
+        SELECT COUNT(*)
+        FROM nboard
+        WHERE
+        <if test="type == 'title'">
+            title LIKE '%' || #{keyword} || '%' AND
+        </if>
+        <if test="type == 'nickname'">
+            user_nickname LIKE '%' || #{keyword} || '%' AND
+        </if>
+        <if test="type == 'content'">
+            content LIKE '%' || #{keyword} || '%' AND
+        </if>
+        <if test="type == 'titleContent'">
+            (title LIKE '%' || #{keyword} || '%'
+            OR content LIKE '%' || #{keyword} || '%')
+            AND
+        </if>
+        <if test="category != null">
+            <if test="category.toString() != 'ALL'">
+                category = #{category} AND
+            </if>
+        </if>
+        board_no is not null
+    </select>
+
+    <!--    // 게시글 추천 기능-->
+    <!--    void plusRec(int boardNo);-->
+    <update id="plusRec">
+        UPDATE nboard
+        SET recommend = recommend + 1
+        WHERE board_no = #{boardNo}
+    </update>
+
+    <!--    // 조회수 증가 기능-->
+    <!--    void plusViews(int boardNo);-->
+    <update id="plusViews">
+        UPDATE nboard
+        SET views = views + 1
+        WHERE board_no = #{boardNo}
+    </update>
+
+
+</mapper>

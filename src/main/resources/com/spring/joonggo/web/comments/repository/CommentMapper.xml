@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.joonggo.web.comments.repository.CommentMapper">
+
+    <!--    //댓글 입력-->
+    <!--    int save(Comment comment);-->
+    <insert id="save">
+        INSERT INTO comments
+        (comment_no, comment_content, board_no, user_id, user_nickname)
+        VALUES
+        (comments_seq.nextval, #{commentContent}, #{boardNo}, #{userId}, #{userNickName})
+    </insert>
+
+    <!--    //댓글 수정-->
+    <!--    int update(Comment comment);-->
+    <update id="update">
+        UPDATE comments
+        SET comment_content = #{commentContent}
+        WHERE comment_no = #{commentNo}
+    </update>
+
+    <!--    //댓글 삭제-->
+    <!--    int delete(int commentNo);-->
+    <delete id="delete">
+        DELETE FROM comments
+        WHERE comment_no = #{commentNo}
+    </delete>
+
+    <resultMap id="commentMap" type="com.spring.joonggo.web.comments.domain.Comment">
+        <id property="commentNo" column="comment_no"/>
+        <result property="commentContent" column="comment_content"/>
+        <result property="commentCreatedDate" column="comment_created_date"/>
+        <result property="boardNo" column="board_no"/>
+        <result property="userId" column="user_id"/>
+        <result property="userNickName" column="user_nickname"/>
+    </resultMap>
+
+    <!--    //단일 댓글 조회-->
+    <!--    Comment read(int commentNo);-->
+    <select id="read" resultMap="commentMap">
+        SELECT * FROM comments WHERE comment_no = #{commentNo}
+    </select>
+
+    <!--    //특정 게시글 댓글 목록 조회-->
+    <!--    List<Comment> getCommentList(@Param("bno") int boardNo-->
+    <!--    , @Param("cri") Criteria cri);-->
+    <select id="getCommentList" resultMap="commentMap">
+        <![CDATA[
+        SELECT comment_no, board_no, comment_content, comment_created_date, user_id, user_nickname
+         FROM
+           (
+            SELECT /*+INDEX(comment pk_comment) */
+              rownum rn,  comment_no, board_no, comment_content, comment_created_date, user_id, user_nickname
+            FROM comments
+            WHERE board_no =  #{bno}
+                AND rownum <= #{cri.page} * #{cri.amount}
+           )
+         WHERE rn > (#{cri.page} -1) * #{cri.amount}
+        ]]>
+    </select>
+
+    <!--    //특정 게시글의 댓글 총 개수 조회-->
+    <!--    int getCommentCount(int boardNo);-->
+    <select id="getCommentCount" resultType="int">
+        SELECT COUNT(*) FROM comments WHERE board_no = #{boardNo}
+    </select>
+
+    <!--    //특정 작성자의 댓글 목록 조회-->
+    <!--    List<Comment> getUserComment(@Param("uid") String userId-->
+    <!--    , @Param("cri") Criteria cri);-->
+    <select id="getUserComment" resultMap="commentMap">
+        <![CDATA[
+        SELECT comment_no, board_no, comment_content, comment_created_date, user_id, user_nickname
+         FROM
+           (
+            SELECT /*+INDEX(comment pk_comment) */
+              rownum rn,  comment_no, board_no, comment_content, comment_created_date, user_id, user_nickname
+            FROM comments
+            WHERE user_id =  #{uid}
+                AND rownum <= #{cri.page} * #{cri.amount}
+           )
+         WHERE rn > (#{cri.page} -1) * #{cri.amount}
+        ]]>
+    </select>
+
+    <!--    //특정 작성자의 댓글 총 개수 조회-->
+    <!--    int getUserCommentCount(String userId);-->
+    <select id="getUserCommentCount" resultType="int">
+        SELECT COUNT(*) FROM comments WHERE user_id = #{userId}
+    </select>
+
+
+</mapper>

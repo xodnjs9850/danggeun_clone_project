@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.joonggo.web.wishlist.repository.WishListMapper">
+
+    <!-- 찜 등록 -->
+    <insert id="addWishList">
+        INSERT INTO wishlist
+        (wishlist_no, user_id, user_nickname, goods_no, goods_title)
+        VALUES
+        (wishlist_seq.nextval, #{userId}, #{userNick}, #{productNum}, #{productName})
+    </insert>
+
+    <resultMap id="wishMap" type="com.spring.joonggo.web.wishlist.domain.WishList">
+        <!--  property속성에는 자바핑드명, column은 테이블 컬럼명    -->
+        <result property="productNum" column="goods_no"/>
+        <result property="productName" column="goods_title"/>
+        <result property="userId" column="user_id"/>
+        <result property="userNick" column="user_nickname"/>
+
+    </resultMap>
+
+    <!-- 찜 목록 전체 조회 -->
+    <select id="findWish" resultMap="wishMap">
+        SELECT
+        wishlist_no, user_id, user_nickname, goods_no, goods_title
+        FROM wishlist
+        WHERE user_id = #{UserId}
+    </select>
+
+    <!-- 찜 삭제 기능 -->
+    <delete id="deleteWish">
+        DELETE FROM wishlist WHERE goods_no = ${productNum}
+    </delete>
+
+</mapper>

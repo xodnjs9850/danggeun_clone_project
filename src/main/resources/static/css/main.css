@@ -1,0 +1,22 @@
+
+.pagination {
+    justify-content: center;
+    font-size: 15px;
+}
+
+.btn-orange {
+    color: #fff !important;
+    background: #FD7E14 !important;
+}
+
+#commentModButton {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+#commentDelButton {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
