@@ -91,7 +91,7 @@ class NBoardMapperTest {
     }
 
     @Test
-    @DisplayName("재목으로 검색된 게시물 리스트를 반환해야 한다.")
+    @DisplayName("재목으로 검색된 게시물 리스트를 반환해야 한다.dd")
     void searchByTitleTest() {
         Criteria criteria = new Criteria();
         criteria.setPage(1);
